@@ -12,13 +12,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.laundryapp.R;
-import com.example.laundryapp.data.model.HistoryOrder;
+import com.example.laundryapp.data.repository.OrderRepository;
 import com.example.laundryapp.ui.history.HistoryAdapter;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class HistoryFragment extends Fragment {
+
+    RecyclerView rv;
 
     @Nullable
     @Override
@@ -29,30 +28,17 @@ public class HistoryFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_history, container, false);
 
-        RecyclerView rv = view.findViewById(R.id.rvHistory);
+        rv = view.findViewById(R.id.rvHistory);
         rv.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        List<HistoryOrder> dummy = new ArrayList<>();
-        dummy.add(new HistoryOrder(
-                "#ORD-4829",
-                "Sarah Jenkins",
-                "Express Kiloan",
-                "3.5 kg • 4 Hours",
-                "Rp 52.500",
-                "Processing",
-                "10:30 AM"
-        ));
-        dummy.add(new HistoryOrder(
-                "#ORD-4828",
-                "Michael Chen",
-                "Standard Kiloan",
-                "6.2 kg • 2 Days",
-                "Rp 43.400",
-                "Ready for Pickup",
-                "09:15 AM"
-        ));
-
-        rv.setAdapter(new HistoryAdapter(dummy));
+        rv.setAdapter(new HistoryAdapter(OrderRepository.getAll()));
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // refresh ketika balik dari Payment / Detail
+        rv.setAdapter(new HistoryAdapter(OrderRepository.getAll()));
     }
 }

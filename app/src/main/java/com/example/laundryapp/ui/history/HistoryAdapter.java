@@ -1,5 +1,6 @@
 package com.example.laundryapp.ui.history;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -7,18 +8,16 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import android.content.Intent;
 
 import com.example.laundryapp.R;
 import com.example.laundryapp.data.model.HistoryOrder;
 import com.example.laundryapp.ui.order.OrderDetailActivity;
 
-
 import java.util.List;
 
 public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHolder> {
 
-    List<HistoryOrder> list;
+    private final List<HistoryOrder> list;
 
     public HistoryAdapter(List<HistoryOrder> list) {
         this.list = list;
@@ -44,13 +43,20 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
         h.tvStatus.setText(o.status);
         h.tvTime.setText(o.time);
 
-        // 👉 CLICK LISTENER DI SINI
+        // 🔴🟡 BADGE LOGIC
+        if ("PAID".equalsIgnoreCase(o.paymentStatus)) {
+            h.viewPaymentBadge.setBackgroundResource(R.drawable.bg_badge_yellow);
+        } else {
+            h.viewPaymentBadge.setBackgroundResource(R.drawable.bg_badge_red);
+        }
+
         h.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(v.getContext(), OrderDetailActivity.class);
             intent.putExtra("order", o);
             v.getContext().startActivity(intent);
         });
     }
+
 
     @Override
     public int getItemCount() {
@@ -59,6 +65,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvOrderId, tvCustomer, tvService, tvDetail, tvPrice, tvStatus, tvTime;
+        View viewPaymentBadge;
 
         ViewHolder(View v) {
             super(v);
@@ -69,6 +76,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
             tvPrice = v.findViewById(R.id.tvPrice);
             tvStatus = v.findViewById(R.id.tvStatus);
             tvTime = v.findViewById(R.id.tvTime);
+            viewPaymentBadge = v.findViewById(R.id.viewPaymentBadge);
         }
     }
 }

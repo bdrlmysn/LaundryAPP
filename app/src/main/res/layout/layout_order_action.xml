@@ -1,23 +1,30 @@
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:gravity="center"
-    android:layout_marginBottom="24dp">
+    android:layout_marginTop="16dp"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@drawable/bg_card">
 
-    <Button
-        android:id="@+id/btnPrint"
-        android:text="Print Invoice"
-        android:layout_width="0dp"
+    <!-- STATUS TEXT -->
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="1"/>
+        android:text="Processing"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:textColor="#FB8C00"/>
 
-    <Button
-        android:id="@+id/btnComplete"
-        android:text="Complete"
-        android:layout_marginStart="12dp"
-        android:layout_width="0dp"
+    <!-- PROGRESS BAR -->
+    <ProgressBar
+        android:id="@+id/progressOrder"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"/>
+        android:layout_marginTop="8dp"
+        android:max="100"
+        android:progress="50"/>
+
 </LinearLayout>

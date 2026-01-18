@@ -1,5 +1,6 @@
 package com.example.laundryapp.ui.home;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -8,7 +9,7 @@ import androidx.fragment.app.Fragment;
 import com.example.laundryapp.R;
 import com.example.laundryapp.ui.fragment.DashboardFragment;
 import com.example.laundryapp.ui.fragment.HistoryFragment;
-import com.example.laundryapp.ui.fragment.OrdersFragment;
+import com.example.laundryapp.ui.order.SelectCustomerActivity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class HomeActivity extends AppCompatActivity {
@@ -29,9 +30,10 @@ public class HomeActivity extends AppCompatActivity {
             if (item.getItemId() == R.id.menu_dashboard) {
                 selectedFragment = new DashboardFragment();
             }
-//            else if (item.getItemId() == R.id.menu_orders) {
-//                selectedFragment = new OrdersFragment();
-//                }
+            else if (item.getItemId() == R.id.menu_orders) {
+                startActivity(new Intent(this, SelectCustomerActivity.class));
+                return true; // stop di sini
+            }
             else if (item.getItemId() == R.id.menu_history) {
                 selectedFragment = new HistoryFragment();
             }
@@ -50,18 +52,3 @@ public class HomeActivity extends AppCompatActivity {
                 .commit();
     }
 }
-
-//package com.example.laundryapp.ui.home;
-//
-//import android.os.Bundle;
-//import androidx.appcompat.app.AppCompatActivity;
-//import com.example.laundryapp.R;
-//
-//public class HomeActivity extends AppCompatActivity {
-//
-//    @Override
-//    protected void onCreate(Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//        setContentView(R.layout.activity_home);
-//    }
-//}

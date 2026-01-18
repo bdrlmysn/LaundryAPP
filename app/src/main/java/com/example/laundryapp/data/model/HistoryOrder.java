@@ -1,4 +1,5 @@
 package com.example.laundryapp.data.model;
+
 import java.io.Serializable;
 
 public class HistoryOrder implements Serializable {
@@ -9,16 +10,20 @@ public class HistoryOrder implements Serializable {
     public String detail;
     public String price;
     public String status;
+    public String paymentStatus;
     public String time;
+    public String note;
 
-    public HistoryOrder (
+    public HistoryOrder(
             String orderId,
             String customer,
             String service,
             String detail,
             String price,
             String status,
-            String time
+            String paymentStatus,
+            String time,
+            String note
     ) {
         this.orderId = orderId;
         this.customer = customer;
@@ -26,6 +31,8 @@ public class HistoryOrder implements Serializable {
         this.detail = detail;
         this.price = price;
         this.status = status;
+        this.paymentStatus = paymentStatus;
         this.time = time;
+        this.note = note;
     }
 }

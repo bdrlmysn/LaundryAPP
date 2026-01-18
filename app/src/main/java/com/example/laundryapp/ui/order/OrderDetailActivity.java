@@ -1,10 +1,8 @@
 package com.example.laundryapp.ui.order;
 
 import android.os.Bundle;
-import android.view.View;
-import android.widget.TextView;
 import android.widget.ProgressBar;
-
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -23,13 +21,17 @@ public class OrderDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_order_detail);
 
-        HistoryOrder order =
-                (HistoryOrder) getIntent().getSerializableExtra("order");
+        order = (HistoryOrder) getIntent().getSerializableExtra("order");
+
+        if (order == null) {
+            finish();
+            return;
+        }
 
         tvStatus = findViewById(R.id.tvStatus);
         progressOrder = findViewById(R.id.progressOrder);
 
-        if ("PROCESSING".equals(order.status)) {
+        if ("PROCESSING".equalsIgnoreCase(order.status)) {
             tvStatus.setText("Processing");
             progressOrder.setProgress(50);
         } else {
