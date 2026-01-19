@@ -17,7 +17,7 @@ import com.example.laundryapp.ui.service.ServiceListActivity;
 import com.example.laundryapp.util.SessionManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-public class HomeActivity extends AppCompatActivity {
+public class HomeActivity extends AppCompatActivity implements DashboardFragment.DashboardNav{
 
     private SessionManager session;
     private BottomNavigationView bottomNav;
@@ -80,5 +80,9 @@ public class HomeActivity extends AppCompatActivity {
                 .beginTransaction()
                 .replace(R.id.fragment_container, fragment)
                 .commit();
+    }
+    @Override
+    public void openHistory() {
+        bottomNav.setSelectedItemId(R.id.menu_history);
     }
 }

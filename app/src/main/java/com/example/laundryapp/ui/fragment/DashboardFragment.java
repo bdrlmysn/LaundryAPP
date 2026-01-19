@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,6 +23,13 @@ import com.example.laundryapp.util.DateRangeUtil;
 import com.example.laundryapp.util.FormatUtil;
 import com.example.laundryapp.util.SessionManager;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.example.laundryapp.ui.order.RecentOrderAdapter;
+
+// TODO: ganti sesuai activity add order kamu yang layout-nya activity_new_order.xml
+import com.example.laundryapp.ui.order.SelectCustomerActivity;
+
 public class DashboardFragment extends Fragment {
 
     @Nullable
@@ -30,62 +38,103 @@ public class DashboardFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_dashboard, container, false);
 
         SessionManager session = new SessionManager(requireContext());
-
-        // Tombol navigasi
-// Tombol navigasi (safe: kalau view tidak ada, tidak crash)
-        View btnCustomers = v.findViewById(R.id.btnCustomers);
-        if (btnCustomers != null) {
-            btnCustomers.setOnClickListener(x ->
-                    startActivity(new Intent(getContext(), CustomerListActivity.class)));
-        }
-
-        View btnServices = v.findViewById(R.id.btnServices);
-        if (btnServices != null) {
-            btnServices.setOnClickListener(x ->
-                    startActivity(new Intent(getContext(), ServiceListActivity.class)));
-        }
-
-        View btnReports = v.findViewById(R.id.btnReports);
-        if (btnReports != null) {
-            btnReports.setOnClickListener(x ->
-                    startActivity(new Intent(getContext(), ReportActivity.class)));
-        }
-
-        View btnLogout = v.findViewById(R.id.btnLogout);
-        if (btnLogout != null) {
-            btnLogout.setOnClickListener(x -> {
-                session.logout();
-                Toast.makeText(getContext(), "Logout", Toast.LENGTH_SHORT).show();
-                Intent i = new Intent(getContext(), LoginActivity.class);
-                i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(i);
-                requireActivity().finish();
-            });
-        }
-
-
-        // DAO
         OrderDao dao = new OrderDao(requireContext());
 
-        // Revenue Today
+        RecyclerView rv = v.findViewById(R.id.rvRecentOrders);
+        if (rv != null) {
+            rv.setLayoutManager(new LinearLayoutManager(getContext()));
+            RecentOrderAdapter adapter = new RecentOrderAdapter(item -> {
+                // opsional: klik item buka detail
+                // startActivity(new Intent(getContext(), OrderDetailActivity.class).putExtra("order_code", item.orderCode));
+            });
+            rv.setAdapter(adapter);
+
+            // ambil 3 terbaru
+            adapter.submit(dao.getRecent(3));
+        }
+
+
+
+        // ===== Tombol navigasi (safe) ====
+
+        long startToday = DateRangeUtil.startOfToday();
+        long endToday = DateRangeUtil.endOfToday();
+
+        // ===== Revenue Today (PAID) =====
+        int revenueToday = dao.getTotalPaidRevenue(startToday, endToday);
         TextView tvRevenueToday = v.findViewById(R.id.tvRevenueToday);
         if (tvRevenueToday != null) {
-            int revenueToday = dao.getTotalPaidRevenue(DateRangeUtil.startOfToday(), DateRangeUtil.endOfToday());
             tvRevenueToday.setText(FormatUtil.rupiah(revenueToday));
         }
 
-        // Standard Revenue (sementara 0 dulu sampai ada query/kolom pembeda)
-        TextView tvStandardRevenue = v.findViewById(R.id.tvStandardRevenue);
-        if (tvStandardRevenue != null) {
-            tvStandardRevenue.setText(FormatUtil.rupiah(0));
+        // ===== Total Processed Today (SUM KG) =====
+        TextView tvTotalProcessedToday = v.findViewById(R.id.tvTotalProcessedToday);
+        if (tvTotalProcessedToday != null) {
+            double kgToday = dao.getTotalWeight(startToday, endToday);
+            tvTotalProcessedToday.setText(String.format("%.1f kg", kgToday));
         }
 
-        // Express Revenue (sementara 0 dulu sampai ada query/kolom pembeda)
+        // ===== Standard Revenue = REGULER (PAID) =====
+        TextView tvStandardRevenue = v.findViewById(R.id.tvStandardRevenue);
+        if (tvStandardRevenue != null) {
+            int standardToday = dao.getPaidRevenueBySpeed(startToday, endToday, "REGULER");
+            tvStandardRevenue.setText(FormatUtil.rupiah(standardToday));
+        }
+
+        // ===== Express Revenue = KILAT + INSTANT (PAID) =====
         TextView tvExpressRevenue = v.findViewById(R.id.tvExpressRevenue);
         if (tvExpressRevenue != null) {
-            tvExpressRevenue.setText(FormatUtil.rupiah(0));
+            int expressToday = dao.getPaidRevenueBySpeed(startToday, endToday, "KILAT", "INSTANT");
+            tvExpressRevenue.setText(FormatUtil.rupiah(expressToday));
+        }
+
+        // ===== Persen kenaikan pendapatan vs kemarin =====
+        TextView tvRevenueChange = v.findViewById(R.id.tvRevenueChange);
+        if (tvRevenueChange != null) {
+            int revenueYesterday = dao.getTotalPaidRevenue(DateRangeUtil.startOfYesterday(), DateRangeUtil.endOfYesterday());
+
+            int pct;
+            if (revenueYesterday <= 0) {
+                pct = (revenueToday > 0) ? 100 : 0;
+            } else {
+                pct = Math.round(((revenueToday - revenueYesterday) * 100f) / revenueYesterday);
+            }
+
+            String arrow = (pct >= 0) ? "▲" : "▼";
+            tvRevenueChange.setText(arrow + " " + Math.abs(pct) + "% vs yesterday");
+        }
+
+        // ===== Klik New Kiloan Order -> buka AddOrderActivity =====
+        View cardNewOrder = v.findViewById(R.id.cardNewOrder);
+        if (cardNewOrder != null) {
+            cardNewOrder.setOnClickListener(x -> {
+                startActivity(new Intent(getContext(), SelectCustomerActivity.class));
+            });
+        }
+
+        // ===== Revenue This Month =====
+        TextView tvRevenueMonth = v.findViewById(R.id.tvRevenueMonth);
+        if (tvRevenueMonth != null) {
+            int monthRevenue = dao.getTotalPaidRevenue(DateRangeUtil.startOfThisMonth(), DateRangeUtil.endOfThisMonth());
+            tvRevenueMonth.setText(FormatUtil.rupiah(monthRevenue));
+        }
+
+        // ===== Klik View All -> scroll ke bawah (Total Revenue This Month) =====
+        TextView tvViewAll = v.findViewById(R.id.tvViewAll);
+        if (tvViewAll != null) {
+            tvViewAll.setOnClickListener(x -> {
+                if (getActivity() instanceof DashboardNav) {
+                    ((DashboardNav) getActivity()).openHistory();
+                } else {
+                    Toast.makeText(getContext(), "Host belum support openHistory()", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
 
         return v;
     }
+    public interface DashboardNav {
+        void openHistory();
+    }
+
 }

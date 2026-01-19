@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView
+    android:id="@+id/scrollDashboard"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -48,15 +49,15 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:background="@drawable/bg_gradient_blue"
                 android:orientation="vertical"
-                android:padding="20dp"
-                android:background="@drawable/bg_gradient_blue">
+                android:padding="20dp">
 
                 <TextView
-                    android:text="Total Revenue Today"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="@android:color/white"/>
+                    android:text="Total Revenue Today"
+                    android:textColor="@android:color/white" />
 
 
                 <TextView
@@ -69,10 +70,11 @@
                     android:textStyle="bold" />
 
                 <TextView
-                    android:text="▲ 12% vs yesterday"
+                    android:id="@+id/tvRevenueChange"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="@android:color/white"/>
+                    android:text="▲ 0% vs yesterday"
+                    android:textColor="@android:color/white" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -100,7 +102,8 @@
                     android:layout_height="wrap_content">
 
                     <TextView
-                        android:text="186 kg"
+                        android:id="@+id/tvTotalProcessedToday"
+                        android:text="0 kg"
                         android:textSize="24sp"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -183,9 +186,13 @@
 
             <!-- NEW ORDER -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardNewOrder"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
                 app:cardCornerRadius="20dp"
                 app:strokeWidth="2dp">
 <!--                app:strokeColor="#B3E5FC">-->
@@ -231,13 +238,42 @@
                 android:layout_height="wrap_content"/>
 
             <TextView
+                android:id="@+id/tvViewAll"
                 android:text="View All"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:textColor="#03A9F4"/>
         </LinearLayout>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvRecentOrders"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:nestedScrollingEnabled="false"/>
 
-        <!-- nanti RecyclerView taruh di sini -->
+        <!-- MONTHLY REVENUE SECTION (target scroll) -->
+        <LinearLayout
+            android:id="@+id/sectionRevenueMonth"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Total Revenue This Month"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvRevenueMonth"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Rp0"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:layout_marginTop="8dp"/>
+        </LinearLayout>
 
     </LinearLayout>
 </ScrollView>

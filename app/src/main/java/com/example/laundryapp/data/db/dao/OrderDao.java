@@ -225,4 +225,99 @@ public class OrderDao {
 
         return db.rawQuery(sql, args.toArray(new String[0]));
     }
+
+    public double getTotalWeight(long startMillis, long endMillis) {
+        SQLiteDatabase db = helper.getReadableDatabase();
+        Cursor c = db.rawQuery(
+                "SELECT IFNULL(SUM(" + DbContract.Orders.COL_WEIGHT + "),0) " +
+                        " FROM " + DbContract.Orders.TABLE + " o " +
+                        " WHERE o." + DbContract.Orders.COL_CREATED_AT + " BETWEEN ? AND ?",
+                new String[]{String.valueOf(startMillis), String.valueOf(endMillis)}
+        );
+        try {
+            if (c.moveToFirst()) return c.getDouble(0);
+            return 0;
+        } finally {
+            c.close();
+        }
+    }
+
+    /**
+     * Revenue PAID by service speed (REGULER / KILAT / INSTANT)
+     */
+    public int getPaidRevenueBySpeed(long startMillis, long endMillis, String... speeds) {
+        if (speeds == null || speeds.length == 0) return 0;
+
+        StringBuilder in = new StringBuilder();
+        for (int i = 0; i < speeds.length; i++) {
+            in.append("?");
+            if (i < speeds.length - 1) in.append(",");
+        }
+
+        ArrayList<String> args = new ArrayList<>();
+        args.add(String.valueOf(startMillis));
+        args.add(String.valueOf(endMillis));
+        for (String s : speeds) args.add(s);
+
+        String sql =
+                "SELECT IFNULL(SUM(o." + DbContract.Orders.COL_TOTAL + "),0) " +
+                        " FROM " + DbContract.Orders.TABLE + " o " +
+                        " JOIN " + DbContract.Services.TABLE + " s ON s." + DbContract.Services._ID + "=o." + DbContract.Orders.COL_SERVICE_ID +
+                        " WHERE o." + DbContract.Orders.COL_CREATED_AT + " BETWEEN ? AND ? " +
+                        " AND o." + DbContract.Orders.COL_PAYMENT_STATUS + "='PAID' " +
+                        " AND s." + DbContract.Services.COL_SPEED + " IN (" + in + ")";
+
+        SQLiteDatabase db = helper.getReadableDatabase();
+        Cursor c = db.rawQuery(sql, args.toArray(new String[0]));
+        try {
+            if (c.moveToFirst()) return c.getInt(0);
+            return 0;
+        } finally {
+            c.close();
+        }
+    }
+
+    public List<OrderEntity> getRecent(int limit) {
+        SQLiteDatabase db = helper.getReadableDatabase();
+        List<OrderEntity> list = new ArrayList<>();
+
+        String sql =
+                "SELECT o." + DbContract.Orders.COL_ORDER_CODE + "," +
+                        " c." + DbContract.Customers.COL_NAME + "," +
+                        " s." + DbContract.Services.COL_SPEED + "," +
+                        " s." + DbContract.Services.COL_TYPE + "," +
+                        " o." + DbContract.Orders.COL_WEIGHT + "," +
+                        " o." + DbContract.Orders.COL_TOTAL + "," +
+                        " o." + DbContract.Orders.COL_STATUS + "," +
+                        " o." + DbContract.Orders.COL_PAYMENT_STATUS + "," +
+                        " o." + DbContract.Orders.COL_CREATED_AT +
+                        " FROM " + DbContract.Orders.TABLE + " o" +
+                        " JOIN " + DbContract.Customers.TABLE + " c ON c." + DbContract.Customers._ID + "=o." + DbContract.Orders.COL_CUSTOMER_ID +
+                        " JOIN " + DbContract.Services.TABLE + " s ON s." + DbContract.Services._ID + "=o." + DbContract.Orders.COL_SERVICE_ID +
+                        " ORDER BY o." + DbContract.Orders.COL_CREATED_AT + " DESC" +
+                        " LIMIT " + limit;
+
+        Cursor c = db.rawQuery(sql, null);
+        try {
+            while (c.moveToNext()) {
+                OrderEntity o = new OrderEntity();
+                int i = 0;
+                o.orderCode = c.getString(i++);
+                o.customerName = c.getString(i++);
+                o.speed = c.getString(i++);
+                o.type = c.getString(i++);
+                o.weight = c.getDouble(i++);
+                o.total = c.getInt(i++);
+                o.status = c.getString(i++);
+                o.paymentStatus = c.getString(i++);
+                o.createdAt = c.getLong(i++);
+                list.add(o);
+            }
+            return list;
+        } finally {
+            c.close();
+        }
+    }
+
+
 }
