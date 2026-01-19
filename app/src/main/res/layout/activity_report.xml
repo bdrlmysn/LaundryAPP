@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F6F8FA">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        app:title="Report"
+        app:titleTextColor="@android:color/black"
+        app:navigationIcon="@drawable/ic_back"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <Button
+                android:id="@+id/btnDaily"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="Harian"
+                android:textColor="@android:color/white"
+                android:background="@drawable/bg_button_primary"/>
+
+            <Button
+                android:id="@+id/btnMonthly"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:text="Bulanan"
+                android:textColor="@android:color/white"
+                android:background="@drawable/bg_button_primary"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_card"
+            android:padding="14dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvRange"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Range:"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/tvRevenue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Total Pendapatan (PAID): Rp 0"
+                android:layout_marginTop="6dp"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="Filter Type"
+            android:textStyle="bold"/>
+
+        <Spinner
+            android:id="@+id/spFilterType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <Button
+            android:id="@+id/btnExport"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="12dp"
+            android:text="Export CSV"
+            android:textColor="@android:color/white"
+            android:background="@drawable/bg_button_primary"/>
+
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvReport"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="16dp"/>
+</LinearLayout>

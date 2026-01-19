@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Kelola"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:layout_marginBottom="12dp"/>
+
+    <Button
+        android:id="@+id/btnCustomers"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:text="Kelola Pelanggan"
+        android:textColor="@android:color/white"
+        android:background="@drawable/bg_button_primary"/>
+
+    <Button
+        android:id="@+id/btnServices"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginTop="10dp"
+        android:text="Kelola Layanan"
+        android:textColor="@android:color/white"
+        android:background="@drawable/bg_button_primary"/>
+
+</LinearLayout>

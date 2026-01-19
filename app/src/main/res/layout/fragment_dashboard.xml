@@ -60,9 +60,10 @@
 
 
                 <TextView
+                    android:id="@+id/tvRevenueToday"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="$1,245.00"
+                    android:text="Rp0"
                     android:textColor="@android:color/white"
                     android:textSize="30sp"
                     android:textStyle="bold" />
@@ -130,7 +131,8 @@
                     android:layout_height="wrap_content">
 
                     <TextView
-                        android:text="$845"
+                        android:id="@+id/tvStandardRevenue"
+                        android:text="Rp0"
                         android:textSize="24sp"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -161,7 +163,8 @@
                     android:layout_height="match_parent">
 
                     <TextView
-                        android:text="$400"
+                        android:id="@+id/tvExpressRevenue"
+                        android:text="Rp0"
                         android:textSize="24sp"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"

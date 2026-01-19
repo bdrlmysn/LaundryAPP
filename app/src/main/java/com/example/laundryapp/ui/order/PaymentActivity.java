@@ -5,17 +5,23 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.example.laundryapp.R;
-import com.example.laundryapp.data.model.Customer;
-import com.example.laundryapp.data.model.HistoryOrder;
-import com.example.laundryapp.data.repository.OrderRepository;
+import com.example.laundryapp.data.db.dao.CustomerDao;
+import com.example.laundryapp.data.db.dao.OrderDao;
+import com.example.laundryapp.data.db.dao.ServiceDao;
+import com.example.laundryapp.data.db.model.CustomerEntity;
+import com.example.laundryapp.data.db.model.ServiceEntity;
 import com.example.laundryapp.ui.home.HomeActivity;
+import com.example.laundryapp.util.FormatUtil;
+import com.example.laundryapp.util.LaundryLabel;
+import com.example.laundryapp.util.SessionManager;
 
-import java.text.NumberFormat;
+import java.util.Calendar;
 import java.util.Locale;
 
 public class PaymentActivity extends AppCompatActivity {
@@ -25,71 +31,96 @@ public class PaymentActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_payment);
 
-        // Toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
+        if (getSupportActionBar() != null) getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         toolbar.setNavigationOnClickListener(v -> finish());
 
-        // Ambil data
-        Customer customer = (Customer) getIntent().getSerializableExtra("customer");
-        String summary = getIntent().getStringExtra("summary");
-        int subtotal = getIntent().getIntExtra("subtotal", 0);
-        String note = getIntent().getStringExtra("note");
+        SessionManager session = new SessionManager(this);
+        if (!session.isLoggedIn()) { finish(); return; }
 
-        int tax = (int) (subtotal * 0.10);
+        long customerId = getIntent().getLongExtra("customer_id", 0);
+        long serviceId  = getIntent().getLongExtra("service_id", 0);
+        double weight   = getIntent().getDoubleExtra("weight", 0);
+        String parfum   = getIntent().getStringExtra("parfum");
+        String summary  = getIntent().getStringExtra("summary");
+        String note     = getIntent().getStringExtra("note");
+        int subtotal    = getIntent().getIntExtra("subtotal", 0);
+
+        if (customerId <= 0 || serviceId <= 0) { finish(); return; }
+
+        CustomerDao customerDao = new CustomerDao(this);
+        ServiceDao serviceDao = new ServiceDao(this);
+        OrderDao orderDao = new OrderDao(this);
+
+        CustomerEntity customer = customerDao.getById(customerId);
+        ServiceEntity service = serviceDao.getById(serviceId);
+        if (customer == null || service == null) { finish(); return; }
+
+        int tax = (int) Math.round(subtotal * 0.10);
         int total = subtotal + tax;
 
-        NumberFormat nf = NumberFormat.getCurrencyInstance(new Locale("id", "ID"));
-
         ((TextView) findViewById(R.id.tvCustomerName)).setText(customer.name);
-        ((TextView) findViewById(R.id.tvOrderSummary)).setText(summary);
-        ((TextView) findViewById(R.id.tvSubtotal)).setText(nf.format(subtotal));
-        ((TextView) findViewById(R.id.tvTax)).setText(nf.format(tax));
-        ((TextView) findViewById(R.id.tvTotal)).setText(nf.format(total));
-        ((TextView) findViewById(R.id.tvTotalPay)).setText(nf.format(total));
+        ((TextView) findViewById(R.id.tvOrderSummary)).setText(summary != null ? summary : "-");
+        ((TextView) findViewById(R.id.tvSubtotal)).setText(FormatUtil.rupiah(subtotal));
+        ((TextView) findViewById(R.id.tvTax)).setText(FormatUtil.rupiah(tax));
+        ((TextView) findViewById(R.id.tvTotal)).setText(FormatUtil.rupiah(total));
+        ((TextView) findViewById(R.id.tvTotalPay)).setText(FormatUtil.rupiah(total));
 
         TextView tvNote = findViewById(R.id.tvNote);
         tvNote.setText(note == null || note.trim().isEmpty() ? "-" : note);
 
-        // PAYMENT METHOD
+        // Estimate date/time (tampil sesuai layout yang sudah ada)
+        TextView tvEstimateDate = findViewById(R.id.tvEstimateDate);
+        tvEstimateDate.setText(buildEstimateText(service.speed));
+
         RadioGroup rgPayment = findViewById(R.id.rgPaymentMethod);
         Button btnSubmit = findViewById(R.id.btnSubmit);
 
         btnSubmit.setOnClickListener(v -> {
-
             int checkedId = rgPayment.getCheckedRadioButtonId();
             String paymentStatus = "UNPAID";
+            if (checkedId == R.id.rbCash || checkedId == R.id.rbQris) paymentStatus = "PAID";
+            if (checkedId == R.id.rbLater) paymentStatus = "UNPAID";
 
-            if (checkedId == R.id.rbCash || checkedId == R.id.rbQris) {
-                paymentStatus = "PAID";
-            }
-
-            // BUAT ORDER HISTORY
-            HistoryOrder order = new HistoryOrder(
-                    "ORD-" + System.currentTimeMillis(), // orderId
-                    customer.name,                       // customer
-                    summary,                             // service
-                    summary,                             // detail (sementara pakai summary)
-                    nf.format(total),                    // price
-                    "PROCESSING",                        // status
-                    paymentStatus,                       // paymentStatus
-                    "Hari ini",                          // time
-                    note                                 // note
+            String orderCode = orderDao.createOrder(
+                    customerId,
+                    serviceId,
+                    weight,
+                    parfum,
+                    note,
+                    subtotal,
+                    tax,
+                    total,
+                    paymentStatus,
+                    session.userId()
             );
 
+            Toast.makeText(this, "Order dibuat: " + orderCode, Toast.LENGTH_SHORT).show();
 
-
-
-            OrderRepository.add(order);
-
-            // KEMBALI KE HOME → HISTORY
             Intent i = new Intent(this, HomeActivity.class);
             i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            i.putExtra("open_history", true);
             startActivity(i);
             finish();
         });
+    }
+
+    private String buildEstimateText(String speedCode) {
+        Calendar cal = Calendar.getInstance();
+        if ("REGULER".equalsIgnoreCase(speedCode)) {
+            cal.add(Calendar.DAY_OF_MONTH, 2);
+            return "Estimasi selesai: " + String.format(Locale.US, "%02d/%02d/%04d",
+                    cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.YEAR));
+        } else if ("KILAT".equalsIgnoreCase(speedCode)) {
+            cal.add(Calendar.DAY_OF_MONTH, 1);
+            return "Estimasi selesai: " + String.format(Locale.US, "%02d/%02d/%04d",
+                    cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.YEAR));
+        } else {
+            cal.add(Calendar.HOUR_OF_DAY, 4);
+            return "Estimasi selesai: " + String.format(Locale.US, "%02d/%02d/%04d %02d:%02d",
+                    cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.YEAR),
+                    cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
+        }
     }
 }
