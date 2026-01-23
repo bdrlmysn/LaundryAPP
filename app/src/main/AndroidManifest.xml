@@ -5,7 +5,7 @@
         android:allowBackup="true"
         android:label="LaundryAPP"
         android:icon="@mipmap/logo"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/logo"
         android:supportsRtl="true"
         android:theme="@style/Theme.LaundryAPP">
 
