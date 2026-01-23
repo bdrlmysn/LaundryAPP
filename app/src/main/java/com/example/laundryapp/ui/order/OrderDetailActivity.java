@@ -32,6 +32,9 @@ public class OrderDetailActivity extends AppCompatActivity {
     private TextView tvTotalPrice; // fallback (lama)
     private Button btnNextStatus;
 
+    private TextView tvStatusFlow;   // NEW
+    private List<String> flow;       // NEW
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,6 +50,11 @@ public class OrderDetailActivity extends AppCompatActivity {
         order = orderDao.getByOrderCode(orderCode);
         if (order == null) { finish(); return; }
 
+        // normalisasi type lama (kalau ada typo) supaya label/flow benar
+        order.type = LaundryLabel.normalizeType(order.type);
+
+        flow = LaundryLabel.flowForType(order.type);
+
         bindViews();
         render();
 
@@ -56,12 +64,27 @@ public class OrderDetailActivity extends AppCompatActivity {
                 Toast.makeText(this, "Status sudah final (DIAMBIL)", Toast.LENGTH_SHORT).show();
                 return;
             }
-            boolean ok = orderDao.updateStatus(order.orderCode, next);
-            if (ok) {
-                order = orderDao.getByOrderCode(order.orderCode);
-                render();
-                Toast.makeText(this, "Status -> " + LaundryLabel.statusLabel(next), Toast.LENGTH_SHORT).show();
-            }
+
+            btnNextStatus.setEnabled(false);
+
+            new Thread(() -> {
+                boolean ok = orderDao.updateStatus(order.orderCode, next);
+                if (ok) order = orderDao.getByOrderCode(order.orderCode);
+
+                runOnUiThread(() -> {
+                    if (!ok || order == null) {
+                        Toast.makeText(this, "Gagal update status", Toast.LENGTH_SHORT).show();
+                        btnNextStatus.setEnabled(true);
+                        return;
+                    }
+
+                    order.type = LaundryLabel.normalizeType(order.type);
+                    flow = LaundryLabel.flowForType(order.type);
+
+                    render();
+                    Toast.makeText(this, "Status -> " + LaundryLabel.statusLabel(order.status), Toast.LENGTH_SHORT).show();
+                });
+            }).start();
         });
     }
 
@@ -77,28 +100,34 @@ public class OrderDetailActivity extends AppCompatActivity {
         tvServiceName = findViewById(R.id.tvServiceName);
         tvServiceDetail = findViewById(R.id.tvServiceDetail);
 
-        // payment summary (baru)
         tvSubtotal = findViewById(R.id.tvSubtotal);
         tvTax = findViewById(R.id.tvTax);
         tvTotal = findViewById(R.id.tvTotal);
         tvPaymentStatus = findViewById(R.id.tvPaymentStatus);
         tvNote = findViewById(R.id.tvNote);
 
-        // fallback id lama
         tvTotalPrice = findViewById(R.id.tvTotalPrice);
 
         btnNextStatus = findViewById(R.id.btnNextStatus);
+
+        // dari include layout_order.xml/layout_order_action.xml (yang berisi tvStatusFlow)
+        tvStatusFlow = findViewById(R.id.tvStatusFlow);
     }
 
     private void render() {
         tvOrderId.setText(order.orderCode);
 
         tvStatus.setText(LaundryLabel.statusLabel(order.status));
-        progressOrder.setProgress(LaundryLabel.statusProgress(order.status));
+
+        if (progressOrder != null) {
+            progressOrder.setMax(100);
+            progressOrder.setProgress(LaundryLabel.progressForFlow(order.status, flow));
+        }
 
         tvCustomerName.setText(order.customerName);
         tvCustomerPhone.setText(order.customerPhone);
-        tvCustomerAddress.setText(order.customerAddress == null || order.customerAddress.trim().isEmpty() ? "-" : order.customerAddress);
+        tvCustomerAddress.setText(order.customerAddress == null || order.customerAddress.trim().isEmpty()
+                ? "-" : order.customerAddress);
 
         tvServiceName.setText(LaundryLabel.speedLabel(order.speed) + " - " + LaundryLabel.typeLabel(order.type));
         tvServiceDetail.setText(String.format("%.1f kg • %s/kg", order.weight, FormatUtil.rupiah(order.pricePerKg)));
@@ -111,11 +140,15 @@ public class OrderDetailActivity extends AppCompatActivity {
 
         if (tvTotalPrice != null) tvTotalPrice.setText(FormatUtil.rupiah(order.total));
 
+        if (tvStatusFlow != null) tvStatusFlow.setText(LaundryLabel.flowText(flow));
+
         btnNextStatus.setEnabled(nextStatus(order.status) != null);
     }
 
     private String nextStatus(String current) {
-        List<String> list = LaundryLabel.STATUSES;
+        List<String> list = flow;
+        if (list == null || list.isEmpty()) list = LaundryLabel.STATUSES;
+
         int idx = list.indexOf(current);
         if (idx < 0) return list.get(0);
         if (idx >= list.size() - 1) return null;

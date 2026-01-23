@@ -5,7 +5,7 @@ import java.io.Serializable;
 public class ServiceEntity implements Serializable {
     public long id;
     public String speed; // REGULER/KILAT/INSTANT
-    public String type;  // CUCI_SETIRKA/CUCI_SAJA/SETRIKA_SAJA
+    public String type;  // CUCI_SETRIKA/CUCI_SAJA/SETRIKA_SAJA
     public int pricePerKg;
     public boolean active;
 
