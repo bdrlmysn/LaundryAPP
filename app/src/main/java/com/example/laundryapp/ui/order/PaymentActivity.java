@@ -62,7 +62,16 @@ public class PaymentActivity extends AppCompatActivity {
 
         ((TextView) findViewById(R.id.tvCustomerName)).setText(customer.name);
         ((TextView) findViewById(R.id.tvOrderSummary)).setText(summary != null ? summary : "-");
-        ((TextView) findViewById(R.id.tvSubtotal)).setText(FormatUtil.rupiah(subtotal));
+        TextView tvSubtotalSummary = findViewById(R.id.tvSubtotalSummary);
+        if (tvSubtotalSummary != null) {
+            tvSubtotalSummary.setText(FormatUtil.rupiah(subtotal));
+        }
+
+        // Subtotal (Price Detail - baris Subtotal)
+        TextView tvSubtotalDetail = findViewById(R.id.tvSubtotal);
+        if (tvSubtotalDetail != null) {
+            tvSubtotalDetail.setText(FormatUtil.rupiah(subtotal));
+        }
         ((TextView) findViewById(R.id.tvTax)).setText(FormatUtil.rupiah(tax));
         ((TextView) findViewById(R.id.tvTotal)).setText(FormatUtil.rupiah(total));
         ((TextView) findViewById(R.id.tvTotalPay)).setText(FormatUtil.rupiah(total));
