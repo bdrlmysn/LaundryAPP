@@ -25,5 +25,8 @@
         <!-- ACTION BUTTON -->
         <include layout="@layout/layout_order_action"/>
 
+        <!-- READY FOR PICKUP (muncul saat status SELESAI) -->
+        <include layout="@layout/include_status_ready"/>
+
     </LinearLayout>
 </ScrollView>

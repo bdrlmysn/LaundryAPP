@@ -1,6 +1,9 @@
 package com.example.laundryapp.ui.order;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -15,6 +18,7 @@ import com.example.laundryapp.data.model.HistoryOrder;
 import com.example.laundryapp.util.FormatUtil;
 import com.example.laundryapp.util.LaundryLabel;
 
+import java.net.URLEncoder;
 import java.util.List;
 
 public class OrderDetailActivity extends AppCompatActivity {
@@ -32,8 +36,12 @@ public class OrderDetailActivity extends AppCompatActivity {
     private TextView tvTotalPrice; // fallback (lama)
     private Button btnNextStatus;
 
-    private TextView tvStatusFlow;   // NEW
-    private List<String> flow;       // NEW
+    private TextView tvStatusFlow;
+    private List<String> flow;
+
+    // NEW: Ready for pickup card + button
+    private View cardReadyPickup;
+    private Button btnReadyPickup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,9 +58,7 @@ public class OrderDetailActivity extends AppCompatActivity {
         order = orderDao.getByOrderCode(orderCode);
         if (order == null) { finish(); return; }
 
-        // normalisasi type lama (kalau ada typo) supaya label/flow benar
         order.type = LaundryLabel.normalizeType(order.type);
-
         flow = LaundryLabel.flowForType(order.type);
 
         bindViews();
@@ -86,6 +92,28 @@ public class OrderDetailActivity extends AppCompatActivity {
                 });
             }).start();
         });
+
+        // NEW: tombol kirim WhatsApp (muncul saat status SELESAI)
+        if (btnReadyPickup != null) {
+            btnReadyPickup.setOnClickListener(v -> {
+                if (order == null) return;
+                if (!LaundryLabel.ST_SELESAI.equals(order.status)) {
+                    Toast.makeText(this, "Tombol ini aktif saat status SELESAI", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                String phone = order.customerPhone;
+                if (phone == null || phone.trim().isEmpty()) {
+                    Toast.makeText(this, "Nomor pelanggan kosong", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                String waNumber = normalizeToWaNumber(phone);
+
+                String msg = buildReadyPickupMessage(order);
+                openWhatsApp(waNumber, msg);
+            });
+        }
     }
 
     private void bindViews() {
@@ -109,9 +137,11 @@ public class OrderDetailActivity extends AppCompatActivity {
         tvTotalPrice = findViewById(R.id.tvTotalPrice);
 
         btnNextStatus = findViewById(R.id.btnNextStatus);
-
-        // dari include layout_order.xml/layout_order_action.xml (yang berisi tvStatusFlow)
         tvStatusFlow = findViewById(R.id.tvStatusFlow);
+
+        // NEW (dari include_status_ready.xml)
+        cardReadyPickup = findViewById(R.id.cardReadyPickup);
+        btnReadyPickup = findViewById(R.id.btnReadyPickup);
     }
 
     private void render() {
@@ -139,10 +169,14 @@ public class OrderDetailActivity extends AppCompatActivity {
         if (tvNote != null) tvNote.setText(order.note == null || order.note.trim().isEmpty() ? "-" : order.note);
 
         if (tvTotalPrice != null) tvTotalPrice.setText(FormatUtil.rupiah(order.total));
-
         if (tvStatusFlow != null) tvStatusFlow.setText(LaundryLabel.flowText(flow));
 
         btnNextStatus.setEnabled(nextStatus(order.status) != null);
+
+        // NEW: tampilkan card ready pickup hanya saat status SELESAI
+        if (cardReadyPickup != null) {
+            cardReadyPickup.setVisibility(LaundryLabel.ST_SELESAI.equals(order.status) ? View.VISIBLE : View.GONE);
+        }
     }
 
     private String nextStatus(String current) {
@@ -153,5 +187,54 @@ public class OrderDetailActivity extends AppCompatActivity {
         if (idx < 0) return list.get(0);
         if (idx >= list.size() - 1) return null;
         return list.get(idx + 1);
+    }
+
+    // ===== WhatsApp Helpers =====
+
+    // ubah nomor: "08xxx" -> "628xxx", hapus spasi/strip
+    private String normalizeToWaNumber(String phone) {
+        String p = phone.trim();
+        p = p.replace(" ", "").replace("-", "").replace("(", "").replace(")", "");
+        if (p.startsWith("+")) p = p.substring(1);
+
+        if (p.startsWith("0")) {
+            p = "62" + p.substring(1);
+        }
+        return p;
+    }
+
+    private String buildReadyPickupMessage(OrderEntity o) {
+        // Template pesan (bebas kamu edit)
+        return "Halo " + safe(o.customerName) + ",\n"
+                + "Laundry kamu sudah *SELESAI* dan *siap diambil* ✅\n\n"
+                + "Order: " + safe(o.orderCode) + "\n"
+                + "Layanan: " + LaundryLabel.speedLabel(o.speed) + " - " + LaundryLabel.typeLabel(o.type) + "\n"
+                + "Total: " + FormatUtil.rupiah(o.total) + "\n\n"
+                + "Terima kasih 🙏";
+    }
+
+    private String safe(String s) {
+        return (s == null || s.trim().isEmpty()) ? "-" : s.trim();
+    }
+
+    private void openWhatsApp(String waNumber, String message) {
+        try {
+            String encoded = URLEncoder.encode(message, "UTF-8");
+            Uri uri = Uri.parse("https://wa.me/" + waNumber + "?text=" + encoded);
+
+            Intent i = new Intent(Intent.ACTION_VIEW, uri);
+            // opsional: paksa ke WhatsApp kalau ada
+            i.setPackage("com.whatsapp");
+
+            if (i.resolveActivity(getPackageManager()) != null) {
+                startActivity(i);
+            } else {
+                // fallback: buka browser (atau WhatsApp Business)
+                Intent fallback = new Intent(Intent.ACTION_VIEW, uri);
+                startActivity(fallback);
+            }
+        } catch (Exception e) {
+            Toast.makeText(this, "Gagal membuka WhatsApp", Toast.LENGTH_SHORT).show();
+        }
     }
 }
