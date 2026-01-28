@@ -72,7 +72,8 @@ public class OrderDao {
         String sql =
                 "SELECT o." + DbContract.Orders._ID + ", o." + DbContract.Orders.COL_ORDER_CODE + "," +
                         " o." + DbContract.Orders.COL_CUSTOMER_ID + ", c." + DbContract.Customers.COL_NAME + ", c." + DbContract.Customers.COL_PHONE + ", c." + DbContract.Customers.COL_ADDRESS + "," +
-                        " o." + DbContract.Orders.COL_SERVICE_ID + ", s." + DbContract.Services.COL_SPEED + ", s." + DbContract.Services.COL_TYPE + ", s." + DbContract.Services.COL_PRICE_PER_KG + "," +
+                        // ✅ tambah duration_minutes dari services
+                        " o." + DbContract.Orders.COL_SERVICE_ID + ", s." + DbContract.Services.COL_SPEED + ", s." + DbContract.Services.COL_TYPE + ", s." + DbContract.Services.COL_PRICE_PER_KG + ", s." + DbContract.Services.COL_DURATION_MINUTES + "," +
                         " o." + DbContract.Orders.COL_WEIGHT + ", o." + DbContract.Orders.COL_PARFUM + ", o." + DbContract.Orders.COL_NOTE + "," +
                         " o." + DbContract.Orders.COL_SUBTOTAL + ", o." + DbContract.Orders.COL_TAX + ", o." + DbContract.Orders.COL_TOTAL + "," +
                         " o." + DbContract.Orders.COL_PAYMENT_STATUS + ", o." + DbContract.Orders.COL_STATUS + "," +
@@ -100,6 +101,9 @@ public class OrderDao {
             o.speed = c.getString(i++);
             o.type = c.getString(i++);
             o.pricePerKg = c.getInt(i++);
+
+            // ✅ NEW: durasi dari DB service
+            o.durationMinutes = c.getInt(i++);
 
             o.weight = c.getDouble(i++);
             o.parfum = c.getString(i++);
@@ -242,9 +246,6 @@ public class OrderDao {
         }
     }
 
-    /**
-     * Revenue PAID by service speed (REGULER / KILAT / INSTANT)
-     */
     public int getPaidRevenueBySpeed(long startMillis, long endMillis, String... speeds) {
         if (speeds == null || speeds.length == 0) return 0;
 
@@ -318,6 +319,4 @@ public class OrderDao {
             c.close();
         }
     }
-
-
 }

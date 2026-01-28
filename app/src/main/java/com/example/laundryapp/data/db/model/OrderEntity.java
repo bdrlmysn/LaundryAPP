@@ -16,6 +16,9 @@ public class OrderEntity implements Serializable {
     public String type;
     public int pricePerKg;
 
+    // NEW: dari services.duration_minutes
+    public int durationMinutes;
+
     public double weight;
     public String parfum;
     public String note;

@@ -86,6 +86,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
 
+            <!-- ESTIMATE (durasi pengerjaan) -->
+            <TextView
+                android:id="@+id/tvServiceEstimate"
+                android:layout_marginTop="6dp"
+                android:text="Estimasi: -"
+                android:textSize="13sp"
+                android:textColor="#777777"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
             <!-- WEIGHT -->
             <TextView
                 android:text="Weight (Kg)"

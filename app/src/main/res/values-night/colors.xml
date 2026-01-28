@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ===== LaundryApp UI tokens (DARK) ===== -->
+    <color name="la_bg">#121212</color>
+
+    <color name="la_primary">#8AB4F8</color>
+    <color name="la_link">#8AB4F8</color>
+
+    <color name="la_text">#EAEAEA</color>
+    <color name="la_text_hint">#A0A0A0</color>
+
+    <color name="la_input_bg">#1E1E1E</color>
+    <color name="la_input_stroke">#3A3A3A</color>
+
+    <color name="la_badge_bg">#1C2A3A</color>
+    <color name="la_badge_text">#8AB4F8</color>
+
+    <color name="la_button_bg">#3DBDBD</color>
+    <color name="la_button_text">#FFFFFF</color>
+</resources>

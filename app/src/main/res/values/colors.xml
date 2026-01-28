@@ -3,9 +3,34 @@
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
+
     <color name="blue_sky">#29A5F7</color>
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
+
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- (opsional) kalau kamu pakai ini di theme -->
+    <color name="dark_bg">#121212</color>
+    <color name="dark_surface">#1E1E1E</color>
+    <color name="dark_on_surface">#EAEAEA</color>
+
+    <!-- ===== LaundryApp UI tokens (LIGHT) ===== -->
+    <color name="la_bg">#FFFFFF</color>
+
+    <color name="la_primary">@color/blue_sky</color>
+    <color name="la_link">@color/blue_sky</color>
+
+    <color name="la_text">#1A1A1A</color>
+    <color name="la_text_hint">#808080</color>
+
+    <color name="la_input_bg">#FFFFFF</color>
+    <color name="la_input_stroke">#CCCCCC</color>
+
+    <color name="la_badge_bg">#E6F6FF</color>
+    <color name="la_badge_text">@color/blue_sky</color>
+
+    <color name="la_button_bg">#5FE1E1</color>
+    <color name="la_button_text">#FFFFFF</color>
 </resources>

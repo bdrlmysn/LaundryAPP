@@ -13,13 +13,16 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.laundryapp.R;
 import com.example.laundryapp.data.db.dao.OrderDao;
+import com.example.laundryapp.data.db.dao.ServiceDao;
 import com.example.laundryapp.data.db.model.OrderEntity;
 import com.example.laundryapp.data.model.HistoryOrder;
 import com.example.laundryapp.util.FormatUtil;
 import com.example.laundryapp.util.LaundryLabel;
 
 import java.net.URLEncoder;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 public class OrderDetailActivity extends AppCompatActivity {
 
@@ -31,6 +34,7 @@ public class OrderDetailActivity extends AppCompatActivity {
 
     private TextView tvCustomerName, tvCustomerPhone, tvCustomerAddress;
     private TextView tvServiceName, tvServiceDetail;
+    private TextView tvEstimateFinish; // NEW
 
     private TextView tvSubtotal, tvTax, tvTotal, tvPaymentStatus, tvNote;
     private TextView tvTotalPrice; // fallback (lama)
@@ -39,7 +43,6 @@ public class OrderDetailActivity extends AppCompatActivity {
     private TextView tvStatusFlow;
     private List<String> flow;
 
-    // NEW: Ready for pickup card + button
     private View cardReadyPickup;
     private Button btnReadyPickup;
 
@@ -93,7 +96,6 @@ public class OrderDetailActivity extends AppCompatActivity {
             }).start();
         });
 
-        // NEW: tombol kirim WhatsApp (muncul saat status SELESAI)
         if (btnReadyPickup != null) {
             btnReadyPickup.setOnClickListener(v -> {
                 if (order == null) return;
@@ -109,7 +111,6 @@ public class OrderDetailActivity extends AppCompatActivity {
                 }
 
                 String waNumber = normalizeToWaNumber(phone);
-
                 String msg = buildReadyPickupMessage(order);
                 openWhatsApp(waNumber, msg);
             });
@@ -127,6 +128,7 @@ public class OrderDetailActivity extends AppCompatActivity {
 
         tvServiceName = findViewById(R.id.tvServiceName);
         tvServiceDetail = findViewById(R.id.tvServiceDetail);
+        tvEstimateFinish = findViewById(R.id.tvEstimateFinish);
 
         tvSubtotal = findViewById(R.id.tvSubtotal);
         tvTax = findViewById(R.id.tvTax);
@@ -139,14 +141,12 @@ public class OrderDetailActivity extends AppCompatActivity {
         btnNextStatus = findViewById(R.id.btnNextStatus);
         tvStatusFlow = findViewById(R.id.tvStatusFlow);
 
-        // NEW (dari include_status_ready.xml)
         cardReadyPickup = findViewById(R.id.cardReadyPickup);
         btnReadyPickup = findViewById(R.id.btnReadyPickup);
     }
 
     private void render() {
         tvOrderId.setText(order.orderCode);
-
         tvStatus.setText(LaundryLabel.statusLabel(order.status));
 
         if (progressOrder != null) {
@@ -159,9 +159,24 @@ public class OrderDetailActivity extends AppCompatActivity {
         tvCustomerAddress.setText(order.customerAddress == null || order.customerAddress.trim().isEmpty()
                 ? "-" : order.customerAddress);
 
+        // SERVICE
         tvServiceName.setText(LaundryLabel.speedLabel(order.speed) + " - " + LaundryLabel.typeLabel(order.type));
-        tvServiceDetail.setText(String.format("%.1f kg • %s/kg", order.weight, FormatUtil.rupiah(order.pricePerKg)));
 
+        String durationLabel = ServiceDao.durationLabel(order.durationMinutes);
+        tvServiceDetail.setText(String.format(
+                Locale.US,
+                "%.1f kg • %s/kg • %s",
+                order.weight,
+                FormatUtil.rupiah(order.pricePerKg),
+                durationLabel
+        ));
+
+        if (tvEstimateFinish != null) {
+            String estimate = buildEstimateFinishText(order.createdAt, order.durationMinutes);
+            tvEstimateFinish.setText("Estimasi selesai: " + estimate);
+        }
+
+        // PAYMENT
         if (tvSubtotal != null) tvSubtotal.setText(FormatUtil.rupiah(order.subtotal));
         if (tvTax != null) tvTax.setText(FormatUtil.rupiah(order.tax));
         if (tvTotal != null) tvTotal.setText(FormatUtil.rupiah(order.total));
@@ -173,9 +188,30 @@ public class OrderDetailActivity extends AppCompatActivity {
 
         btnNextStatus.setEnabled(nextStatus(order.status) != null);
 
-        // NEW: tampilkan card ready pickup hanya saat status SELESAI
         if (cardReadyPickup != null) {
             cardReadyPickup.setVisibility(LaundryLabel.ST_SELESAI.equals(order.status) ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    private String buildEstimateFinishText(long createdAtMillis, int durationMinutes) {
+        if (durationMinutes <= 0) durationMinutes = 2880;
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(createdAtMillis);
+        cal.add(Calendar.MINUTE, durationMinutes);
+
+        if (durationMinutes >= 1440) {
+            return String.format(Locale.US, "%02d/%02d/%04d",
+                    cal.get(Calendar.DAY_OF_MONTH),
+                    cal.get(Calendar.MONTH) + 1,
+                    cal.get(Calendar.YEAR));
+        } else {
+            return String.format(Locale.US, "%02d/%02d/%04d %02d:%02d",
+                    cal.get(Calendar.DAY_OF_MONTH),
+                    cal.get(Calendar.MONTH) + 1,
+                    cal.get(Calendar.YEAR),
+                    cal.get(Calendar.HOUR_OF_DAY),
+                    cal.get(Calendar.MINUTE));
         }
     }
 
@@ -191,7 +227,6 @@ public class OrderDetailActivity extends AppCompatActivity {
 
     // ===== WhatsApp Helpers =====
 
-    // ubah nomor: "08xxx" -> "628xxx", hapus spasi/strip
     private String normalizeToWaNumber(String phone) {
         String p = phone.trim();
         p = p.replace(" ", "").replace("-", "").replace("(", "").replace(")", "");
@@ -204,7 +239,6 @@ public class OrderDetailActivity extends AppCompatActivity {
     }
 
     private String buildReadyPickupMessage(OrderEntity o) {
-        // Template pesan (bebas kamu edit)
         return "Halo " + safe(o.customerName) + ",\n"
                 + "Laundry kamu sudah *SELESAI* dan *siap diambil* ✅\n\n"
                 + "Order: " + safe(o.orderCode) + "\n"
@@ -223,13 +257,11 @@ public class OrderDetailActivity extends AppCompatActivity {
             Uri uri = Uri.parse("https://wa.me/" + waNumber + "?text=" + encoded);
 
             Intent i = new Intent(Intent.ACTION_VIEW, uri);
-            // opsional: paksa ke WhatsApp kalau ada
             i.setPackage("com.whatsapp");
 
             if (i.resolveActivity(getPackageManager()) != null) {
                 startActivity(i);
             } else {
-                // fallback: buka browser (atau WhatsApp Business)
                 Intent fallback = new Intent(Intent.ACTION_VIEW, uri);
                 startActivity(fallback);
             }

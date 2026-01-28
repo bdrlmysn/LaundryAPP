@@ -224,11 +224,6 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
 
-                    <RadioButton
-                        android:id="@+id/rbLater"
-                        android:text="Bayar Nanti"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
                 </RadioGroup>
             </LinearLayout>
 

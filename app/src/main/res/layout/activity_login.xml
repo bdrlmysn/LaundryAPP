@@ -4,14 +4,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="24dp"
-    android:background="#FFFFFF">
+    android:background="@color/la_bg">
 
     <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingBottom="50dp">
 
-        <!-- 1️⃣ APP (di belakang) -->
+        <!-- APP (di belakang) -->
         <TextView
             android:id="@+id/tvApp"
             android:layout_width="wrap_content"
@@ -24,12 +24,12 @@
             android:paddingEnd="15dp"
             android:paddingBottom="7dp"
             android:text="APP"
-            android:textColor="#56CCF2"
+            android:textColor="@color/la_badge_text"
             android:textSize="24sp"
             android:textStyle="bold|italic"
             android:includeFontPadding="false"/>
 
-        <!-- 2️⃣ Laundry (di depan) -->
+        <!-- Laundry (di depan) -->
         <TextView
             android:id="@+id/tvLaundry"
             android:layout_width="wrap_content"
@@ -37,17 +37,16 @@
             android:text="Laundry"
             android:textSize="33sp"
             android:textStyle="bold"
-            android:textColor="#2F80ED"
+            android:textColor="@color/la_primary"
             android:includeFontPadding="false"/>
 
     </FrameLayout>
-
 
     <ImageView
         android:layout_width="430dp"
         android:layout_height="290dp"
         android:src="@drawable/loginpage"
-        android:layout_marginBottom="20dp"/>
+        android:layout_marginBottom="20dp" />
 
     <EditText
         android:id="@+id/etUsername"
@@ -56,7 +55,9 @@
         android:background="@drawable/bg_input"
         android:padding="14dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:textColor="@color/la_text"
+        android:textColorHint="@color/la_text_hint" />
 
     <EditText
         android:id="@+id/etPassword"
@@ -67,11 +68,13 @@
         android:padding="14dp"
         android:layout_marginTop="12dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:textColor="@color/la_text"
+        android:textColorHint="@color/la_text_hint" />
 
     <TextView
         android:text="Forgot Password"
-        android:textColor="#3DA5FF"
+        android:textColor="@color/la_link"
         android:layout_marginTop="8dp"
         android:layout_gravity="end"
         android:layout_width="wrap_content"
@@ -82,9 +85,9 @@
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_marginTop="24dp"
-        android:backgroundTint="#5FE1E1"
+        android:backgroundTint="@color/la_button_bg"
         android:text="LOGIN"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/la_button_text"
         android:textStyle="bold" />
 
 </LinearLayout>

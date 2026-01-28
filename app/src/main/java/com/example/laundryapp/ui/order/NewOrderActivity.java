@@ -37,6 +37,7 @@ public class NewOrderActivity extends AppCompatActivity {
     private Spinner spinnerSpeed, spinnerType, spinnerParfum;
     private EditText etWeight, etNote;
     private TextView tvEstimate;
+    private TextView tvServiceEstimate; // NEW
 
     private CustomerDao customerDao;
     private ServiceDao serviceDao;
@@ -78,6 +79,9 @@ public class NewOrderActivity extends AppCompatActivity {
         etNote   = findViewById(R.id.etNote);
         tvEstimate = findViewById(R.id.tvEstimate);
 
+        // NEW: TextView estimasi pengerjaan
+        tvServiceEstimate = findViewById(R.id.tvServiceEstimate);
+
         Button btnPlus = findViewById(R.id.btnPlus);
         Button btnMinus = findViewById(R.id.btnMinus);
 
@@ -89,7 +93,14 @@ public class NewOrderActivity extends AppCompatActivity {
         ));
 
         spinnerParfum.setOnItemSelectedListener(SimpleListener.onChange(this::updateTotal));
-        spinnerSpeed.setOnItemSelectedListener(SimpleListener.onChange(this::loadTypesBySpeed));
+
+        // saat speed berubah -> load types + update estimasi pengerjaan
+        spinnerSpeed.setOnItemSelectedListener(SimpleListener.onChange(() -> {
+            loadTypesBySpeed();
+            updateServiceEstimate(); // NEW
+        }));
+
+        // saat type berubah -> update total (tidak mempengaruhi estimasi pengerjaan)
         spinnerType.setOnItemSelectedListener(SimpleListener.onChange(this::updateTotal));
 
         btnPlus.setOnClickListener(v -> {
@@ -148,6 +159,10 @@ public class NewOrderActivity extends AppCompatActivity {
             speeds = java.util.Arrays.asList("REGULER");
         }
         spinnerSpeed.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, speeds));
+
+        // NEW: setelah speeds kebaca, langsung update estimasi
+        updateServiceEstimate();
+
         loadTypesBySpeed();
     }
 
@@ -158,6 +173,10 @@ public class NewOrderActivity extends AppCompatActivity {
             types = java.util.Arrays.asList("CUCI_SETIRKA");
         }
         spinnerType.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, types));
+
+        // NEW: pastikan estimasi selalu sesuai speed terkini
+        updateServiceEstimate();
+
         updateTotal();
     }
 
@@ -181,5 +200,22 @@ public class NewOrderActivity extends AppCompatActivity {
         lastSubtotal = base + parfumPrice;
 
         tvEstimate.setText(FormatUtil.rupiah(lastSubtotal));
+    }
+
+    // =======================
+    // NEW: Estimasi pengerjaan
+    // =======================
+    private void updateServiceEstimate() {
+        if (tvServiceEstimate == null) return;
+
+        String speed = spinnerSpeed.getSelectedItem() != null ? spinnerSpeed.getSelectedItem().toString() : "REGULER";
+        tvServiceEstimate.setText("Estimasi pengerjaan: " + speedDurationLabel(speed));
+    }
+
+    // hanya menampilkan: 4 jam / 1 hari / 2 hari
+    private String speedDurationLabel(String speedCode) {
+        if ("INSTANT".equalsIgnoreCase(speedCode)) return "4 jam";
+        if ("KILAT".equalsIgnoreCase(speedCode)) return "1 hari";
+        return "2 hari"; // REGULER + fallback aman
     }
 }

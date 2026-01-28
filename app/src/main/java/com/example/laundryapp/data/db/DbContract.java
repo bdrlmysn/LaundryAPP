@@ -6,7 +6,7 @@ public final class DbContract {
     private DbContract() {}
 
     public static final String DB_NAME = "laundryapp.db";
-    public static final int DB_VERSION = 1;
+    public static final int DB_VERSION = 2; // ⬅️ naikkan versi DB
 
     public static final class Users implements BaseColumns {
         public static final String TABLE = "users";
@@ -32,6 +32,9 @@ public final class DbContract {
         public static final String COL_PRICE_PER_KG = "price_per_kg";
         public static final String COL_IS_ACTIVE = "is_active";
         public static final String COL_CREATED_AT = "created_at";
+
+        // NEW: estimasi durasi pengerjaan (menit)
+        public static final String COL_DURATION_MINUTES = "duration_minutes";
     }
 
     public static final class Orders implements BaseColumns {

@@ -37,6 +37,15 @@
                 android:layout_marginTop="2dp"/>
 
             <TextView
+                android:id="@+id/tvServiceEstimate"
+                android:layout_marginTop="4dp"
+                android:text="Estimasi: -"
+                android:textSize="12sp"
+                android:textColor="#777777"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <TextView
                 android:id="@+id/tvActive"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

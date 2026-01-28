@@ -18,7 +18,6 @@ import com.example.laundryapp.data.db.model.CustomerEntity;
 import com.example.laundryapp.data.db.model.ServiceEntity;
 import com.example.laundryapp.ui.home.HomeActivity;
 import com.example.laundryapp.util.FormatUtil;
-import com.example.laundryapp.util.LaundryLabel;
 import com.example.laundryapp.util.SessionManager;
 
 import java.util.Calendar;
@@ -62,16 +61,13 @@ public class PaymentActivity extends AppCompatActivity {
 
         ((TextView) findViewById(R.id.tvCustomerName)).setText(customer.name);
         ((TextView) findViewById(R.id.tvOrderSummary)).setText(summary != null ? summary : "-");
-        TextView tvSubtotalSummary = findViewById(R.id.tvSubtotalSummary);
-        if (tvSubtotalSummary != null) {
-            tvSubtotalSummary.setText(FormatUtil.rupiah(subtotal));
-        }
 
-        // Subtotal (Price Detail - baris Subtotal)
+        TextView tvSubtotalSummary = findViewById(R.id.tvSubtotalSummary);
+        if (tvSubtotalSummary != null) tvSubtotalSummary.setText(FormatUtil.rupiah(subtotal));
+
         TextView tvSubtotalDetail = findViewById(R.id.tvSubtotal);
-        if (tvSubtotalDetail != null) {
-            tvSubtotalDetail.setText(FormatUtil.rupiah(subtotal));
-        }
+        if (tvSubtotalDetail != null) tvSubtotalDetail.setText(FormatUtil.rupiah(subtotal));
+
         ((TextView) findViewById(R.id.tvTax)).setText(FormatUtil.rupiah(tax));
         ((TextView) findViewById(R.id.tvTotal)).setText(FormatUtil.rupiah(total));
         ((TextView) findViewById(R.id.tvTotalPay)).setText(FormatUtil.rupiah(total));
@@ -79,18 +75,25 @@ public class PaymentActivity extends AppCompatActivity {
         TextView tvNote = findViewById(R.id.tvNote);
         tvNote.setText(note == null || note.trim().isEmpty() ? "-" : note);
 
-        // Estimate date/time (tampil sesuai layout yang sudah ada)
+        // Estimate date/time (NGIKUT DB SERVICE)
         TextView tvEstimateDate = findViewById(R.id.tvEstimateDate);
-        tvEstimateDate.setText(buildEstimateText(service.speed));
+        tvEstimateDate.setText(buildEstimateTextFromMinutes(service.durationMinutes));
 
         RadioGroup rgPayment = findViewById(R.id.rgPaymentMethod);
         Button btnSubmit = findViewById(R.id.btnSubmit);
 
         btnSubmit.setOnClickListener(v -> {
             int checkedId = rgPayment.getCheckedRadioButtonId();
-            String paymentStatus = "UNPAID";
-            if (checkedId == R.id.rbCash || checkedId == R.id.rbQris) paymentStatus = "PAID";
-            if (checkedId == R.id.rbLater) paymentStatus = "UNPAID";
+            if (checkedId == -1) {
+                Toast.makeText(this, "Pilih metode pembayaran dulu", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String paymentStatus = "PAID"; // cuma Cash / QRIS
+            if (!(checkedId == R.id.rbCash || checkedId == R.id.rbQris)) {
+                Toast.makeText(this, "Metode pembayaran tidak valid", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
             String orderCode = orderDao.createOrder(
                     customerId,
@@ -115,21 +118,24 @@ public class PaymentActivity extends AppCompatActivity {
         });
     }
 
-    private String buildEstimateText(String speedCode) {
+    private String buildEstimateTextFromMinutes(int durationMinutes) {
+        if (durationMinutes <= 0) durationMinutes = 2880;
+
         Calendar cal = Calendar.getInstance();
-        if ("REGULER".equalsIgnoreCase(speedCode)) {
-            cal.add(Calendar.DAY_OF_MONTH, 2);
+        cal.add(Calendar.MINUTE, durationMinutes);
+
+        if (durationMinutes >= 1440) {
             return "Estimasi selesai: " + String.format(Locale.US, "%02d/%02d/%04d",
-                    cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.YEAR));
-        } else if ("KILAT".equalsIgnoreCase(speedCode)) {
-            cal.add(Calendar.DAY_OF_MONTH, 1);
-            return "Estimasi selesai: " + String.format(Locale.US, "%02d/%02d/%04d",
-                    cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.YEAR));
+                    cal.get(Calendar.DAY_OF_MONTH),
+                    cal.get(Calendar.MONTH) + 1,
+                    cal.get(Calendar.YEAR));
         } else {
-            cal.add(Calendar.HOUR_OF_DAY, 4);
             return "Estimasi selesai: " + String.format(Locale.US, "%02d/%02d/%04d %02d:%02d",
-                    cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.YEAR),
-                    cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
+                    cal.get(Calendar.DAY_OF_MONTH),
+                    cal.get(Calendar.MONTH) + 1,
+                    cal.get(Calendar.YEAR),
+                    cal.get(Calendar.HOUR_OF_DAY),
+                    cal.get(Calendar.MINUTE));
         }
     }
 }
